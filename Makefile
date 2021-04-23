@@ -1,3 +1,7 @@
+
+z:
+	./losp.ros
+
 call: clean all
 all:
 	python3 -um svr
