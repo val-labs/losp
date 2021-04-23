@@ -12,13 +12,7 @@ exec ros -Q -- $0 "$@" # |#
   (:use :cl))
 (in-package :ros.script.losp.3828195431)
 
-
 (push :hunchentoot-no-ssl *features*)
-;; A chat server in 30 lines
-;; -------------------------
-
-;; First define classes for rooms and users. Make these subclasses of
-;; `websocket-resource` and `websocket-client`.
 
 (defpackage :my-chat (:use :cl))
 (in-package :my-chat)
@@ -30,6 +24,14 @@ exec ros -Q -- $0 "$@" # |#
   ((name :initarg :name :initform (error "Name this room!") :reader name))
   (:default-initargs :client-class 'user))
 
+(defclass chat-room2 (hunchensocket:websocket-resource)
+  ((name :initarg :name :initform (error "Name this room!") :reader name))
+  (:default-initargs :client-class 'user))
+
+(defclass chat-room3 (hunchensocket:websocket-resource)
+  ((name :initarg :name :initform (error "Name this room!") :reader name))
+  (:default-initargs :client-class 'user))
+
 (defclass user (hunchensocket:websocket-client)
   ((name :initarg :user-agent :reader name :initform (error "Name this user!"))))
 
@@ -37,9 +39,9 @@ exec ros -Q -- $0 "$@" # |#
 ;; `hunchensocket:*websocket-dispatch-table*` works just like
 ;; `hunchentoot:*dispatch-table*`, but for websocket specific resources.
 
-(defvar *chat-rooms* (list (make-instance 'chat-room :name "/bongo")
-                           (make-instance 'chat-room :name "/fury")
-                           (make-instance 'chat-room :name "/websocket")))
+(defvar *chat-rooms* (list (make-instance 'chat-room3 :name "/bongo")
+                           (make-instance 'chat-room2 :name "/fury")
+                           (make-instance 'chat-room  :name "/websocket")))
 
 (defun find-room (request)
   (find (hunchentoot:script-name request) *chat-rooms* :test #'string= :key #'name))
@@ -51,6 +53,12 @@ exec ros -Q -- $0 "$@" # |#
 (defun broadcast (room message &rest args)
   (loop for peer in (hunchensocket:clients room)
         do (hunchensocket:send-text-message peer (apply #'format nil message args))))
+
+(defmethod hunchensocket:client-connected ((room chat-room2) user)
+  (broadcast room (format nil "L([1, 2, 3, ~s])~%" (name room))))
+
+(defmethod hunchensocket:text-message-received ((room chat-room2) user message)
+  (broadcast room (format nil "L([1, 2, 3, ~a])~%" message)))
 
 (defmethod hunchensocket:client-connected ((room chat-room) user)
   (broadcast room "~a has joined ~a" (name user) (name room)))
@@ -64,15 +72,30 @@ exec ros -Q -- $0 "$@" # |#
 ;; Let's serve a client off of `/` using a `hunchentoot:easy-handler`
 
 (hunchentoot:define-easy-handler (index :uri "/") () "\
- <script>
-L=console.log
-     var ws = window.ws = new WebSocket(
-         'ws' + location.origin.substr(4) + '/websocket');
-     ws.onopen    = function(e){ ws.send('Hello!') }
-     ws.onmessage = function(e){ alert(e.data) }
-L('xxxx')
- </script>
- ")
+<script>
+    L = console.log
+    var ws = new WebSocket('ws' + location.origin.substr(4) + '/websocket');
+    ws.onopen    = function(e){ ws.send('Hello!') }
+    ws.onmessage = function(e){ alert(e.data) }
+    L('xxxx')
+</script>")
+
+(hunchentoot:define-easy-handler (css :uri "/s.css") ()
+  ;; set mime-type here to text/css
+  "text/css"
+  (uiop:read-file-string "www/s.css"))
+
+(hunchentoot:define-easy-handler (index2 :uri "/bongo") ()
+  (concatenate 'string
+	       "<script>"
+	       (uiop:read-file-string "www/bongo.js")
+	       "</script>"))
+
+(hunchentoot:define-easy-handler (index3 :uri "/fury") ()
+  (concatenate 'string
+	       "<script>"
+	       (uiop:read-file-string "www/fury.js")
+	       "</script>"))
 
 ;; Finally, start the server. `hunchensocket:websocket-acceptor` works
 ;; just like `hunchentoot:acceptor`, and you can probably also use
@@ -83,6 +106,7 @@ L('xxxx')
 (defun main (&rest argv)
   (declare (ignorable argv))
   (hunchentoot:start *server*)
+  (format t "listening...~%")
   (loop (sleep 60)))
 
 ;; Now open two browser windows on http://www.websocket.org/echo.html,
