@@ -35,12 +35,31 @@ ws.onerror   = e=>L("ws error")
 
 function processInput(s){
     L("input1", s)
-    ws.send("!" + s)
+    ws.send(`/*${s}*/`)
     L("input9", s)
+}
+
+function getStacktrace (e){
+    var obj = {}
+    Error.captureStackTrace(obj)
+    return obj.stack
 }
 
 function processOutput(s){
     L("output1", s)
+    try{
+	eval(s)
+    }catch(e){
+	var obj = {}
+	Error.captureStackTrace(obj)
+	var stack = obj.stack.split('\n')
+	stack.shift()
+	var msg = e + "\n" + stack.join("\n")
+	L("<<<" + msg + ">>>")
+	add(`<div style="background:pink">\
+${msg}</div>`)
+	//alert(msg)
+    }
     L("output9", s)
 }
 
