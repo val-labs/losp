@@ -1,24 +1,16 @@
 #|-*- mode:lisp -*-
 exec ros -Q -- $0 "$@" # |#
+(in-package :cl-user)
 (progn ;;init forms
   (ros:ensure-asdf)
-  #+quicklisp(ql:quickload
-	      '(:hunchensocket
-		:parenscript
-		) :silent t)
+  #+quicklisp
+  (eval-when (:compile-toplevel :load-toplevel :execute)
+    (ql:quickload '(:hunchensocket :parenscript)))
+  (push :hunchentoot-no-ssl *features*)
   )
 
-(defpackage :ros.script.losp.3828195431
-  (:use :cl))
-(in-package :ros.script.losp.3828195431)
-
-(push :hunchentoot-no-ssl *features*)
-
-(defpackage :my-chat (:use :cl :parenscript))
-(in-package :my-chat)
-
-;;(eval-when (:compile-toplevel :load-toplevel :execute)
-;;  (ql:quickload :hunchensocket))
+(defpackage :losp-chat (:use :cl :parenscript :hunchentoot :hunchensocket))
+(in-package :losp-chat)
 
 (defclass chat-room (hunchensocket:websocket-resource)
   ((name :initarg :name :initform (error "Name this room!") :reader name))

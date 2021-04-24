@@ -1,10 +1,8 @@
-
-z:
-	./losp.ros
-
 call: clean all
-all:
-	python3 -um svr
+all: losp
+losp: ; ./losp2.ros
+svr: ; python3 -um svr
 clean:
 	rm -fr __pycache__
 	find . -name '*~' | xargs rm
+	tree .
