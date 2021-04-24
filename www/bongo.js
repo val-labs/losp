@@ -51,10 +51,14 @@ function getStacktrace (e){
 
 function processOutput(s){
     L("output1", s)
+    var c = s[0]
+    s = s.slice(1)
+    L("output2", c, s)
     try{
 	var r = eval(s)
 	L("R", r)
-	add(r)
+	if(c=='<')
+	    add(r)
     }catch(e){
 	var obj = {}
 	Error.captureStackTrace(obj)

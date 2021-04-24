@@ -14,11 +14,11 @@ exec ros -Q -- $0 "$@" # |#
 
 (push :hunchentoot-no-ssl *features*)
 
-(defpackage :my-chat (:use :cl))
+(defpackage :my-chat (:use :cl :parenscript))
 (in-package :my-chat)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (ql:quickload :hunchensocket))
+;;(eval-when (:compile-toplevel :load-toplevel :execute)
+;;  (ql:quickload :hunchensocket))
 
 (defclass chat-room (hunchensocket:websocket-resource)
   ((name :initarg :name :initform (error "Name this room!") :reader name))
@@ -59,6 +59,24 @@ exec ros -Q -- $0 "$@" # |#
 
 (defmethod hunchensocket:text-message-received ((room chat-room2) user message)
   (broadcast room (format nil "L([1, 2, 3, ~a])~%" message)))
+
+(defmethod hunchensocket:text-message-received ((room chat-room3) user message)
+  (format t "00:[~s]~%" (elt message 0))
+  (let ((msg (subseq message 1)))
+    (format t "11:[~s]~%" msg)
+    (let ((expr (read-from-string msg)))
+      (format t "22:[~s]~%" expr)
+      (cond ((eql (elt message 0) #\<)
+	     (format t "33~%")
+	     (let ((ret (ps* expr)))
+	       (format t "44:[~s]~%" ret)
+	       (broadcast room (concatenate 'string "<" ret))))
+	    ((eql (elt message 0) #\>)
+	     (format t "55~%")
+	     (let ((val (eval expr)))
+	       (format t "66:add('~s')~%" val)
+	       (broadcast room (format nil ">add('~s')~%" val))))
+	    (t (format t "ELSE~%"))))))
 
 (defmethod hunchensocket:client-connected ((room chat-room) user)
   (broadcast room "~a has joined ~a" (name user) (name room)))
