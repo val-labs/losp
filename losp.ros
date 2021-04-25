@@ -30,22 +30,27 @@ exec ros -Q -- $0 "$@" # |#
         do (send-text-message peer (apply #'format nil message args))))
 
 (defmethod text-message-received ((room chat-room) user message)
-  (format t "00:[~s]~%" (elt message 0))
-  (cond ((eql (elt message 0) #\.)
-	 (let ((msg (subseq message 1)))
-	   (let ((expr (read-from-string msg)))
-	     (format t "22:[~s]~%" expr)
-	     (let ((rslt (ps* expr)))
-	       (format t "33:[~s]~%" rslt)
+  (format t "000:[~s]~%" (elt message 0))
+  (let ((ch (elt message 0)))
+    (cond ((eql ch #\*)
+	   (format t "100:PING~%")
+	   (send-text-message user "*"))
+	  ((eql ch #\.)
+	   (let ((msg (subseq message 1)))
+	     (format t "200:[~s]~%" (elt msg 0))
+	     (let ((expr (read-from-string msg)))
+	       (format t "210:[~s]~%" expr)
+	       (let ((rslt (ps* expr)))
+		 (format t "220:[~s]~%" rslt)
+		 (broadcast room (concatenate
+				  'string "." rslt))))))
+	  (t
+	   (let ((expr (read-from-string message)))
+	     (format t "300:[~s]~%" expr)
+	     (let ((rslt (write-to-string (eval expr))))
+	       (format t "310:[~s]~%" rslt)
 	       (broadcast room (concatenate
-				'string "." rslt))))))
-	(t
-	 (let ((expr (read-from-string message)))
-	   (format t "44:[~s]~%" expr)
-	   (let ((rslt (write-to-string (eval expr))))
-	     (format t "55:[~s]~%" rslt)
-	     (broadcast room (concatenate
-			      'string "," rslt)))))))
+				'string "," rslt))))))))
 
 (defmethod client-connected ((room chat-room) user)
   t) ;;(broadcast room "~a has joined ~a" (name user) (name room)))

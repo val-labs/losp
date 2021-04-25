@@ -65,11 +65,16 @@ list 1 2
   var ws = new WebSocket(
       "ws" + location.href.substr(
 	  4, location.href.length-9))
-  ws.onopen    = e=>L("ws open")
-  ws.onclose   = e=>L("ws close")
-  ws.onmessage = e=>processOutput(e.data)
-  ws.onerror   = e=>L("ws error")
+  ws.onopen    = e =>{L("ws open"), ping()}
+  ws.onclose   = e => L("ws close")
+  ws.onmessage = e => processOutput(e.data)
+  ws.onerror   = e => L("ws error")
 
+  function ping(){
+      ws.send("*")
+      setTimeout(ping, 5000)
+  }
+  
   function processInput(s){
       L("input1", s)
       ws.send(s)
@@ -85,12 +90,20 @@ list 1 2
       L("output1", s)
       var c = s[0]
       s = s.slice(1)
-      L("output2", c, s) 
+      L("output2", c, s)
       try{
-	  var r = eval(s)
-	  L("R", r)
-	  if(c=='<')
-	      add(r)
+	  if(c=='*'){
+	      L("PONG")
+	  }else if (c=='.'){
+	      add("CLT:" + s)
+	      var ret = eval(s)
+	      L("RET:", ret)
+	      add("RET:" + ret)
+	  }else if (c==','){
+	      add("SVR:" + s)
+	  }else{
+	      L("ERROR: unknown first char: "+c)
+	  }
       }catch(e){
 	  var obj = {}
 	  Error.captureStackTrace(obj)
