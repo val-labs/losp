@@ -7,21 +7,15 @@ exec ros -Q -- $0 "$@" # |#
     (ql:quickload '(:hunchensocket :parenscript) :silent t))
   (push :hunchentoot-no-ssl *features*))
 
-(defpackage :losp-chat
+(defpackage :losp-chat2
   (:use :cl :parenscript :hunchentoot :hunchensocket))
-(in-package :losp-chat)
+(in-package :losp-chat2)
 
-(defclass chat-room (websocket-resource)
-  ((name :initarg :name :initform (error "Name this room!") :reader name))
-  (:default-initargs :client-class 'user))
-
-(defclass user (websocket-client)
-  ((name :initarg :user-agent :reader name :initform (error "Name this user!"))))
-
-(defvar *chat-rooms* (list (make-instance 'chat-room :name "/bongo")))
+(defvar *chat-rooms* (list (make-instance 'websocket-resource)))
 
 (defun find-room (request)
-  (find (script-name request) *chat-rooms* :test #'string= :key #'name))
+  (declare (ignore request))
+  (car *chat-rooms*))
 
 (pushnew 'find-room *websocket-dispatch-table*)
 
@@ -29,7 +23,7 @@ exec ros -Q -- $0 "$@" # |#
   (loop for peer in (clients room)
         do (send-text-message peer (apply #'format nil message args))))
 
-(defmethod text-message-received ((room chat-room) user message)
+(defmethod text-message-received ((room websocket-resource) user message)
   (format t "000:[~s]~%" (elt message 0))
   (let ((ch (elt message 0)))
     (cond ((eql ch #\*)
@@ -52,18 +46,15 @@ exec ros -Q -- $0 "$@" # |#
 	       (broadcast room (concatenate
 				'string "," rslt))))))))
 
-(defmethod client-connected ((room chat-room) user)
-  t) ;;(broadcast room "~a has joined ~a" (name user) (name room)))
-
-(defmethod client-disconnected ((room chat-room) user)
-  t) ;;(broadcast room "~a has left ~a" (name user) (name room)))
-
 (define-easy-handler (css :uri "/s.css") ()
   (setf (content-type*) "text/css")
   (uiop:read-file-string "www/s.css"))
 
-(define-easy-handler (bongo-html :uri "/bongo.html") ()
-  (uiop:read-file-string "www/bongo.html"))
+(define-easy-handler (bongo-html :uri "/") ()
+  (uiop:read-file-string "www/index.html"))
+
+;;(define-easy-handler (bongo-html :uri "/bongo.html") ()
+;;  (uiop:read-file-string "www/bongo.html"))
 
 (defclass websocket-easy-acceptor (websocket-acceptor easy-acceptor) ()
   (:documentation "Special WebSocket easy acceptor"))

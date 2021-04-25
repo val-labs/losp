@@ -1,13 +1,21 @@
 body {
     xfont: normal 16px/1.618em Arial, sans-serif;
-    font: normal 16px/1.618em serif;
+    xxfont: normal 16px/1.618em serif;
 }
 
 h3:first-child {
     margin-top: 0;
 }
 
+pre:first-child {
+    margin-top: 0;
+}
+
 p:last-child {
+    margin-bottom: 0;
+}
+
+pre:last-child {
     margin-bottom: 0;
 }
 

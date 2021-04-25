@@ -2,56 +2,25 @@
 <form name="f" class="notification-area">
   <div id="out"></div>
   <textarea name="stdin" autofocus class="notification"
-	    placeholder=";; type input here...
-;; for instance:
-
-(list 1 2 (list &quot;qqqqq&quot;))
-;; to run this on the client
-
-.(do-a-thing 10 20 30)
-;; to run this on the server
-
-
-;; should be:
-
-list
-;; server var lookup
-
-(list)
-;; server command
-
-list 1 2
-;; server command
-
-.list
-;; client lookup
-
-.(list)
-;; client command
-
-.list 1 2
-;; client command
-
-,local-env-command
-
-"
-	    style="height:100%;min-height:10em;"></textarea>
-  <div>
-    <button name="clear"  type="reset"  value="zzz" style="width:49.5%">clear</button>
-    <button name="submit" type="submit" value="qq"  style="width:49.5%">submit</button>
-  </div>
+	    placeholder=";; type input here..."
+	    style="height:100%;min-height:10em;"
+	    >.(progn
+    (defun q (x)
+    (list x x))
+    (defun clog (x)
+    (console.log x))
+    (clog 9009)
+    (q 100))
+  </textarea>
 </form>
 <script>
-  function L(a){
-      console.log("L", a, arguments)
-      console.log.apply(console.log, arguments)
-      return a
-  }
+  L=console.log
   D=document
   GEBI=(s)=>D.getElementById(s)
   function add(s, e){
       e = e || D.createElement("div")
       GEBI("out").append(e)
+      //D.body.append(e)
       e.className = "notification"
       e.innerHTML = s
   }
@@ -61,7 +30,6 @@ list 1 2
       e.value = ""
       return s
   }
-
   var ws = new WebSocket(
       "ws" + location.href.substr(
 	  4, location.href.length-9))
@@ -69,25 +37,21 @@ list 1 2
   ws.onclose   = e => L("ws close")
   ws.onmessage = e => processOutput(e.data)
   ws.onerror   = e => L("ws error")
-
   function ping(){
       ws.send("*")
-      setTimeout(ping, 5000)
+      setTimeout(ping, 60000)
   }
-  
   function processInput(s){
       L("input1", s)
       ws.send(s)
-      L("input9", s)
+      return false
   }
-
   function getStacktrace (e){
       var obj = {}
       Error.captureStackTrace(obj)
       return obj.stack
   }
   function processOutput(s){
-      L("output1", s)
       var c = s[0]
       s = s.slice(1)
       L("output2", c, s)
@@ -95,10 +59,11 @@ list 1 2
 	  if(c=='*'){
 	      L("PONG")
 	  }else if (c=='.'){
-	      add("CLT:" + s)
-	      var ret = eval(s)
+	      add(`<pre>CLT:${s}</pre>`)
+	      //add("CLT:" + s)
+	      var ret = globalThis.eval(s)
 	      L("RET:", ret)
-	      add("RET:" + ret)
+	      add(`<pre>RET:${ret}</pre>`)
 	  }else if (c==','){
 	      add("SVR:" + s)
 	  }else{
@@ -115,11 +80,9 @@ list 1 2
       }
       L("output9", s)
   }
-
-  const isEnter             = e => (e.altKey && e.code === "Enter")
-
-  D.forms.f.stdin.onkeydown = e => (isEnter(e) ? processInput(read()) : 0)
-
+//  const isEnter             = e => (e.altKey && e.code === "Enter")
+  const isEnter             = e => (!e.shiftKey && e.code === "Enter")
+  D.forms.f.stdin.onkeypress = e => (isEnter(e) ? processInput(read()) : 0)
 /*  add("\
 	<h3>Header 1</h3>\
 	<p>Bacon ipsum dolor sit amet t-bone ham hock short loin, turducken shank chuck swine salami corned beef.</p>\
@@ -132,6 +95,6 @@ list 1 2
 	<h3>Header 3</h3>\
 	<p>Doner frankfurter brisket beef. Chicken ball tip salami ham hock pork belly turkey shankle capicola short loin filet mignon pork. </p>\
 ") /* */
-  add('<pre class="m0">code &lt; <b style="color:violet">qq</b> \n\
-  q </pre>')
+  //add('<pre class="m0">code &lt; <b style="color:violet">qq</b> \n\
+  //q </pre>')
 </script>

@@ -1,0 +1,79 @@
+<link href="s.css" rel="stylesheet">
+<form name="f" class="notification-area">
+  <div id="out"></div>
+  <textarea id="stdin" autofocus class="notification"
+	    placeholder=";; type input here..."
+	    style="height:100%;min-height:10em;"
+	    >.(progn
+    (defun q (x)
+    (list x x))
+    (defun clog (x)
+    (console.log x))
+    (clog 9009)
+    (q 100))
+  </textarea>
+</form>
+<script>
+  class kls extends HTMLDivElement {
+      constructor(){
+	  super()
+	  console.log("WUT")
+      }
+  }
+
+  customElements.define('kls-x', kls, { extends: 'div' })
+
+  let cls1 = document.createElement('div', 'kls-x')
+  
+  L=console.log
+  function L2(x, y){
+      console.log(x, y)
+      return y
+  }
+  D=document
+  GEBI=(s)=>D.getElementById(s)
+  function read(e){
+      L2("READ", e)
+      const s = e.value
+      e.value = ""
+      return s
+  }
+
+  function add(s, elt){
+      const e = elt || D.createElement("div")
+      GEBI("out").append(e)
+      e.className = "notification"
+      e.innerHTML = s
+  }
+
+  var ws = new WebSocket("ws" + location.href.substr(4))
+  ws.ping = ()=>{ws.send("*"),setTimeout(ws.ping, 60000)}
+  ws.onopen    = e =>{L("ws open"), ws.ping()}
+  ws.onclose   = e => L("ws close")
+  ws.onerror   = e => L("ws error")
+  ws.onmessage = e => function(s){
+      var c = s[0]
+      s = s.slice(1)
+      L("output2", c, s)
+      if(c=='*'){
+	  L("PONG")
+      }else if (c=='.'){
+	  L2("CLT0:", s)
+	  add(`<pre>CLT:${s}</pre>`)
+	  var ret = globalThis.eval(s)
+	  L2("RET0:", ret)
+	  add(`<pre>RET:${ret}</pre>`)
+      }else if (c=='.'){
+	  add(`<pre>CLT:${s}</pre>`)
+	  add(`<pre>RET:${globalThis.eval(s)}</pre>`)
+      }else if (c==','){
+	  add(`<pre>SVR:${s}</pre>`)
+      }else
+	  L("ERROR: unknown first char: "+c)
+      L("output9", s)
+  }(e.data)
+
+  GEBI("stdin").onkeypress = function(e){
+      if(!e.shiftKey && e.code==="Enter")
+	  return ws.send(L2("INP:",read(this))) || false}
+</script>

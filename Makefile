@@ -1,6 +1,8 @@
 call: clean all
-all: losp
+all: l2
+#all: losp
 losp: ; ./losp.ros
+l2: ; ./l2.lisp
 svr: ; python3 -um svr
 clean:
 	rm -fr __pycache__
