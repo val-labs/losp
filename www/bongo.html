@@ -1,13 +1,44 @@
 <link href="s.css" rel="stylesheet">
 <form name="f" class="notification-area">
   <div id="out"></div>
-  <textarea name="stdin" rxows="10" autofocus class="notification"
-	    
-	    style="wxidth:100%;height:100%;min-height:10em;"
-	    stxyle="widxth:100%;height:10em;background:cyan">qq</textarea>
+  <textarea name="stdin" autofocus class="notification"
+	    placeholder=";; type input here...
+;; for instance:
+
+(list 1 2 (list &quot;qqqqq&quot;))
+;; to run this on the client
+
+.(do-a-thing 10 20 30)
+;; to run this on the server
+
+
+;; should be:
+
+list
+;; server var lookup
+
+(list)
+;; server command
+
+list 1 2
+;; server command
+
+.list
+;; client lookup
+
+.(list)
+;; client command
+
+.list 1 2
+;; client command
+
+,local-env-command
+
+"
+	    style="height:100%;min-height:10em;"></textarea>
   <div>
-    <button name="clear"  type="reset"  value="zzz" style="width:49%">clear</button>
-    <button name="submit" type="submit" value="qq"  style="width:49%">submit</button>
+    <button name="clear"  type="reset"  value="zzz" style="width:49.5%">clear</button>
+    <button name="submit" type="submit" value="qq"  style="width:49.5%">submit</button>
   </div>
 </form>
 <script>

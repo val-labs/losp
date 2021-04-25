@@ -1,126 +1,73 @@
 #|-*- mode:lisp -*-
 exec ros -Q -- $0 "$@" # |#
-(in-package :cl-user)
 (progn ;;init forms
   (ros:ensure-asdf)
   #+quicklisp
   (eval-when (:compile-toplevel :load-toplevel :execute)
-    (ql:quickload '(:hunchensocket :parenscript)))
-  (push :hunchentoot-no-ssl *features*)
-  )
+    (ql:quickload '(:hunchensocket :parenscript) :silent t))
+  (push :hunchentoot-no-ssl *features*))
 
-(defpackage :losp-chat (:use :cl :parenscript :hunchentoot :hunchensocket))
+(defpackage :losp-chat
+  (:use :cl :parenscript :hunchentoot :hunchensocket))
 (in-package :losp-chat)
 
-(defclass chat-room (hunchensocket:websocket-resource)
+(defclass chat-room (websocket-resource)
   ((name :initarg :name :initform (error "Name this room!") :reader name))
   (:default-initargs :client-class 'user))
 
-(defclass chat-room2 (hunchensocket:websocket-resource)
-  ((name :initarg :name :initform (error "Name this room!") :reader name))
-  (:default-initargs :client-class 'user))
-
-(defclass chat-room3 (hunchensocket:websocket-resource)
-  ((name :initarg :name :initform (error "Name this room!") :reader name))
-  (:default-initargs :client-class 'user))
-
-(defclass user (hunchensocket:websocket-client)
+(defclass user (websocket-client)
   ((name :initarg :user-agent :reader name :initform (error "Name this user!"))))
 
-;; Define a list of rooms. Notice that
-;; `hunchensocket:*websocket-dispatch-table*` works just like
-;; `hunchentoot:*dispatch-table*`, but for websocket specific resources.
-
-(defvar *chat-rooms* (list (make-instance 'chat-room3 :name "/bongo")
-                           (make-instance 'chat-room2 :name "/fury")
-                           (make-instance 'chat-room  :name "/websocket")))
+(defvar *chat-rooms* (list (make-instance 'chat-room :name "/bongo")))
 
 (defun find-room (request)
-  (find (hunchentoot:script-name request) *chat-rooms* :test #'string= :key #'name))
+  (find (script-name request) *chat-rooms* :test #'string= :key #'name))
 
-(pushnew 'find-room hunchensocket:*websocket-dispatch-table*)
-
-;; OK, now a helper function and the dynamics of a chat room.
+(pushnew 'find-room *websocket-dispatch-table*)
 
 (defun broadcast (room message &rest args)
-  (loop for peer in (hunchensocket:clients room)
-        do (hunchensocket:send-text-message peer (apply #'format nil message args))))
+  (loop for peer in (clients room)
+        do (send-text-message peer (apply #'format nil message args))))
 
-(defmethod hunchensocket:client-connected ((room chat-room2) user)
-  (broadcast room (format nil "L([1, 2, 3, ~s])~%" (name room))))
-
-(defmethod hunchensocket:text-message-received ((room chat-room2) user message)
-  (broadcast room (format nil "L([1, 2, 3, ~a])~%" message)))
-
-(defmethod hunchensocket:text-message-received ((room chat-room3) user message)
+(defmethod text-message-received ((room chat-room) user message)
   (format t "00:[~s]~%" (elt message 0))
-  (let ((msg (subseq message 1)))
-    (format t "11:[~s]~%" msg)
-    (let ((expr (read-from-string msg)))
-      (format t "22:[~s]~%" expr)
-      (cond ((eql (elt message 0) #\<)
-	     (format t "33~%")
-	     (let ((ret (ps* expr)))
-	       (format t "44:[~s]~%" ret)
-	       (broadcast room (concatenate 'string "<" ret))))
-	    ((eql (elt message 0) #\>)
-	     (format t "55~%")
-	     (let ((val (eval expr)))
-	       (format t "66:add('~s')~%" val)
-	       (broadcast room (format nil ">add('~s')~%" val))))
-	    (t (format t "ELSE~%"))))))
+  (cond ((eql (elt message 0) #\.)
+	 (let ((msg (subseq message 1)))
+	   (let ((expr (read-from-string msg)))
+	     (format t "22:[~s]~%" expr)
+	     (let ((rslt (ps* expr)))
+	       (format t "33:[~s]~%" rslt)
+	       (broadcast room (concatenate
+				'string "." rslt))))))
+	(t
+	 (let ((expr (read-from-string message)))
+	   (format t "44:[~s]~%" expr)
+	   (let ((rslt (write-to-string (eval expr))))
+	     (format t "55:[~s]~%" rslt)
+	     (broadcast room (concatenate
+			      'string "," rslt)))))))
 
-(defmethod hunchensocket:client-connected ((room chat-room) user)
-  (broadcast room "~a has joined ~a" (name user) (name room)))
+(defmethod client-connected ((room chat-room) user)
+  t) ;;(broadcast room "~a has joined ~a" (name user) (name room)))
 
-(defmethod hunchensocket:client-disconnected ((room chat-room) user)
-  (broadcast room "~a has left ~a" (name user) (name room)))
+(defmethod client-disconnected ((room chat-room) user)
+  t) ;;(broadcast room "~a has left ~a" (name user) (name room)))
 
-(defmethod hunchensocket:text-message-received ((room chat-room) user message)
-  (broadcast room "~a says ~a" (name user) message))  
-
-;; Let's serve a client off of `/` using a `hunchentoot:easy-handler`
-
-(hunchentoot:define-easy-handler (index :uri "/") () "\
-<script>
-    L = console.log
-    var ws = new WebSocket('ws' + location.origin.substr(4) + '/websocket');
-    ws.onopen    = function(e){ ws.send('Hello!') }
-    ws.onmessage = function(e){ alert(e.data) }
-    L('xxxx')
-</script>")
-
-(hunchentoot:define-easy-handler (css :uri "/s.css") ()
-  ;; set mime-type here to text/css
-  "text/css"
+(define-easy-handler (css :uri "/s.css") ()
+  (setf (content-type*) "text/css")
   (uiop:read-file-string "www/s.css"))
 
-(hunchentoot:define-easy-handler (index2 :uri "/bongo") ()
-  (concatenate 'string
-	       "<script>"
-	       (uiop:read-file-string "www/bongo.js")
-	       "</script>"))
+(define-easy-handler (bongo-html :uri "/bongo.html") ()
+  (uiop:read-file-string "www/bongo.html"))
 
-(hunchentoot:define-easy-handler (index3 :uri "/fury") ()
-  (concatenate 'string
-	       "<script>"
-	       (uiop:read-file-string "www/fury.js")
-	       "</script>"))
-
-;; Finally, start the server. `hunchensocket:websocket-acceptor` works
-;; just like `hunchentoot:acceptor`, and you can probably also use
-;; `hunchensocket:websocket-ssl-acceptor`.
-
-(defvar *server* (make-instance 'hunchensocket:websocket-easy-acceptor :port 12345))
+(defvar *default-port* 1234)
+(defvar *server* (make-instance 'websocket-easy-acceptor
+				:port *default-port*))
 
 (defun main (&rest argv)
   (declare (ignorable argv))
-  (hunchentoot:start *server*)
-  (format t "listening...~%")
-  (loop (sleep 60)))
-
-;; Now open two browser windows on http://www.websocket.org/echo.html,
-;; enter `ws://localhost:12345/bongo` as the host and play around chatting with
-;; yourself.
-
-;;; vim: set ft=lisp lisp:
+  (start *server*)
+  (let ((url (format nil "http://localhost:~s/bongo.html" *default-port*)))
+    (format t "listening... - go to ~s~%" url)
+    (uiop:run-program (list "open" url))
+    (loop (sleep 60))))
