@@ -53,18 +53,17 @@ exec ros -Q -- $0 "$@" # |#
 (define-easy-handler (bongo-html :uri "/") ()
   (uiop:read-file-string "www/index.html"))
 
-;;(define-easy-handler (bongo-html :uri "/bongo.html") ()
-;;  (uiop:read-file-string "www/bongo.html"))
-
 (defclass websocket-easy-acceptor (websocket-acceptor easy-acceptor) ()
   (:documentation "Special WebSocket easy acceptor"))
 
 (defvar *default-port* 1234)
-(defvar *server* (make-instance 'websocket-easy-acceptor
-				:port *default-port*))
+(defvar *server-port* nil)
+(defvar *server* nil)
 
 (defun main (&rest argv)
   (declare (ignorable argv))
+  (setf *server* (make-instance 'websocket-easy-acceptor
+				:port *default-port*))
   (start *server*)
   (let ((url (format nil "http://localhost:~s/" *default-port*)))
     (format t "listening... - go to ~s~%" url)
