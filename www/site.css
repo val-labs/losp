@@ -1,0 +1,86 @@
+
+#out-out {
+    xbackground: pink;
+    position: absolute;
+    width: 50%;
+    height: 90%;
+    right: 0px;
+    overflow-y: scroll;
+}
+
+.rcorners1 {
+    border-radius: 25px;
+    background: #73AD21;
+    padding: 20px;
+    width: 200px;
+    height: 150px;
+}
+
+.rcorners2 {
+    border-radius: 25px;
+    border: 2px solid #73AD21;
+    padding: 20px;
+    width: 200px;
+    height: 150px;
+}
+
+.rcorners3 {
+    border-radius: 25px;
+    background: url(paper.gif);
+    background-position: left top;
+    background-repeat: repeat;
+    padding: 20px;
+    width: 200px;
+    height: 150px;
+}
+
+/*
+body {
+    xfont: normal 16px/1.618em Arial, sans-serif;
+    xxfont: normal 16px/1.618em serif;
+}
+
+h3:first-child {
+    margin-top: 0;
+}
+
+pre:first-child {
+    margin-top: 0;
+}
+
+p:last-child {
+    margin-bottom: 0;
+}
+
+pre:last-child {
+    margin-bottom: 0;
+}
+
+.notification-area {
+    position: fixed;
+    top: 1rem;
+    bottom: 1rem;
+    right: 1rem;
+    width: 30em;
+    xxwidth: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.notification {
+    margin: 1em 0 0;
+    padding: 1em;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid #999;
+}
+
+.m0 {
+    margin: 0;
+}
+
+input.notification {
+    background: #ebebe8;
+    xborder: 2px solid black;
+}*/
