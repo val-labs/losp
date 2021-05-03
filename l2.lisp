@@ -66,7 +66,7 @@ exec ros -Q -- $0 "$@" # |#
 (defun main (&rest argv)
   (declare (ignorable argv))
   (start *server*)
-  (let ((url (format nil "http://localhost:~s/bongo.html" *default-port*)))
+  (let ((url (format nil "http://localhost:~s/" *default-port*)))
     (format t "listening... - go to ~s~%" url)
     (uiop:run-program (list "open" url))
     (loop (sleep 60))))
