@@ -42,32 +42,48 @@ ws.onmessage = e => function(s){
 str=JSON.stringify
 
 function isOnFirstLine(pos, text){
-    L(pos, str(text))
-    if(!pos) return true
-    const arr = text.split("\n")
-    if(!arr) return false
-    if (pos < arr[0].length)
-	return true
-    return false
+    L("FL", pos, str(text))
+    for(var n = 0; n < pos; n++)
+	if(text[n] === '\n')
+	    return false
+    return true
 }
 function isOnLastLine(pos, text){
-    L(pos-1===text.length)
-    if(!text)return true;
-    return false
+    L("LL", pos, str(text))
+    for(var n = text.length-1; n > pos; n--)
+	if(text[n] === '\n')
+	    return false
+    return true
 }
 //D.onkeypress = function(e){
 D.onkeydown = function(e){
     var target = e.target
+    if(e.metaKey && e.key === "r"){
+	L("RUN IT")
+	return false;
+    }
+    if(e.metaKey && e.key === "Enter"){
+	L("RUN IT2")
+	return false;
+    }
     if(e.key === "ArrowDown"){
-	L("AD", isOnLastLine(
-	    //window.getSelection().focusOffset,
-	    window.getSelection().anchorOffset,
-	    e.target.innerText))}
+	if(isOnLastLine(
+	    window.getSelection().focusOffset,
+	    e.target.innerText))
+	{
+	    e.target.blur()
+	    return false
+	}
+    }
     if(e.key === "ArrowUp"){
-	L("AU", isOnFirstLine(
-	    //window.getSelection().focusOffset,
+	if(isOnFirstLine(
 	    window.getSelection().anchorOffset,
-	    e.target.innerText))}
+	    e.target.innerText))
+	{
+	    e.target.blur()
+	    return false
+	}
+    }
     L("KP", target, e)
 }
 info("hm")

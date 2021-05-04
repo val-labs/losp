@@ -2,10 +2,14 @@
 #out-out {
     xbackground: pink;
     position: absolute;
-    width: 50%;
+    width: 40%;
     height: 90%;
     right: 0px;
     overflow-y: scroll;
+}
+
+.zz {
+    float: right;
 }
 
 .rcorners1 {
