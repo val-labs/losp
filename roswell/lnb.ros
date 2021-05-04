@@ -72,11 +72,11 @@ exec ros +Q -- $0 "$@" # |#
 	  "<script>" (uiop:read-file-string "www/app.js")   "</script>"
 	  "</html>"))
 
-(define-easy-handler (bongo-html :uri "/2") ()
+(define-easy-handler (bongo2-html :uri "/2") ()
   (concat "<!doctype html>"
 	  "<html>"   (uiop:read-file-string "www/ndx2.html")
 	  "<style>"  (uiop:read-file-string "www/sit2.css") "</style>"
-	  "<script>" (uiop:read-file-string "www/app2.js")   "</script>"
+	  "<script>" (uiop:read-file-string "www/app2.js")  "</script>"
 	  "</html>"))
 
 (defclass websocket-easy-acceptor (websocket-acceptor easy-acceptor) ()
