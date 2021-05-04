@@ -1,6 +1,6 @@
 call: clean all
 all: lnb
-lnb:  ; ./lnb.lisp 8888
+lnb:  ; roswell/lnb.ros 8888
 svr:  ; python3 -um svr
 clean:
 	rm -fr __pycache__
