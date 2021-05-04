@@ -1,5 +1,7 @@
 /* */
-body {
-    background: cyan;
+#left {
+    background: yellow;
 }
-
+#right {
+    background: #223344;
+}
